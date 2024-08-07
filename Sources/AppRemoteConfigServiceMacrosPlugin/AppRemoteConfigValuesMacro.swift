@@ -96,13 +96,12 @@ public enum AppRemoteConfigValuesMacro: MemberMacro {
                 attributedTypeSyntax.attributes.append(
                     .attribute("@escaping").with(\.trailingTrivia, .space)
                 )
-                binding.typeAnnotation?.type = attributedTypeSyntax.cast(TypeSyntax.self)
+                binding.typeAnnotation?.type = TypeSyntax(attributedTypeSyntax)
             } else if let typeSyntax = type.as(FunctionTypeSyntax.self) {
-                binding.typeAnnotation?.type = AttributedTypeSyntax(
+                binding.typeAnnotation?.type = TypeSyntax(AttributedTypeSyntax(
                     attributes: [.attribute("@escaping").with(\.trailingTrivia, .space)],
                     baseType: typeSyntax
-                )
-                .cast(TypeSyntax.self)
+                ))
             } else if binding.typeAnnotation == nil {
                 binding.pattern.trailingTrivia = ""
                 binding.typeAnnotation = TypeAnnotationSyntax(
