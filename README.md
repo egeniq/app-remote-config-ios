@@ -1,7 +1,6 @@
 # AppRemoteConfig for iOS
 
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fegeniq%2Fapp-remote-config-ios%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/egeniq/app-remote-config-ios) [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fegeniq%2Fapp-remote-config-ios%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/egeniq/app-remote-config-ios)
-
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fegeniq%2Fapp-remote-config-ios%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/egeniq/app-remote-config-ios) [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fegeniq%2Fapp-remote-config-ios%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/egeniq/app-remote-config-ios)
 
 Configure apps remotely: A simple but effective way to manage apps remotely.
 
