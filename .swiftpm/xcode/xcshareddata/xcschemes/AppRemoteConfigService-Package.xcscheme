@@ -67,6 +67,26 @@
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AppRemoteConfigServiceTests"
+               BuildableName = "AppRemoteConfigServiceTests"
+               BlueprintName = "AppRemoteConfigServiceTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AppRemoteConfigMacrosPluginTests"
+               BuildableName = "AppRemoteConfigMacrosPluginTests"
+               BlueprintName = "AppRemoteConfigMacrosPluginTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

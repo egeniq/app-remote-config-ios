@@ -1,0 +1,35 @@
+import XCTest
+import Foundation
+import Dependencies
+@testable import AppRemoteConfigService
+
+final class AppRemoteConfigTests: XCTestCase {
+    
+    class Values {
+        init() {
+            foo = nil
+        }
+        
+        var foo: Bool?
+        
+        func apply(settings: [String: Any]) throws {
+            foo = settings["foo"] as? Bool
+        }
+    }
+    
+    
+    func testSomething() async throws {
+        let values = Values()
+        let sut = withDependencies {
+            $0.date.now = Date(timeIntervalSince1970: 0)
+        } operation: {
+            AppRemoteConfigService(url: URL(string: "http://www.example.com")!, minimumRefreshInterval: 60, automaticRefreshInterval: 120, bundledConfigURL: nil, apply: values.apply(settings:))
+        }
+        
+        let settings = sut.resolve(date: Date(timeIntervalSince1970: 0)) as! [String: String]
+        XCTAssertEqual(settings, [:])
+        
+        // TODO: More extensive tests
+        // Mocking content of config not very feasible this way
+    }
+}

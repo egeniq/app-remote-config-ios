@@ -1,5 +1,8 @@
 # AppRemoteConfig for iOS
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fegeniq%2Fapp-remote-config-ios%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/egeniq/app-remote-config-ios) [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fegeniq%2Fapp-remote-config-ios%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/egeniq/app-remote-config-ios)
+
+
 Configure apps remotely: A simple but effective way to manage apps remotely.
 
 Create a simple configuration file that is easy to maintain and host, yet provides important flexibility to specify settings based on your needs.
@@ -24,7 +27,7 @@ To install use:
 
 Import the package in your `Package.swift` file:
 
-    .package(url: "https://github.com/egeniq/app-remote-config-ios", from: "0.0.2"),
+    .package(url: "https://github.com/egeniq/app-remote-config-ios", from: "0.2.0"),
 
 Then a good approach is to create your own `AppRemoteConfigClient`.
 

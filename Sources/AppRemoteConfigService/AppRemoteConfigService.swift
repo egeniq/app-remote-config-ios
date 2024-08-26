@@ -12,6 +12,7 @@ public enum AppRemoteConfigServiceError: Error {
     case keysMismatch(unhandled: Set<String>, incorrect: Set<String>, missing: Set<String>)
 }
 
+/// A service to fetch a remote config from a URL periodically and when the app returns to the foreground.
 public class AppRemoteConfigService {
     let url: URL
     let minimumRefreshInterval: TimeInterval
@@ -33,6 +34,13 @@ public class AppRemoteConfigService {
     @Dependency(\.date.now) var now
     @Dependency(\.mainQueue) var mainQueue
     
+    /// Initializes service
+    /// - Parameters:
+    ///   - url: URL to remote config.
+    ///   - minimumRefreshInterval: The minimum time interval between refreshes.
+    ///   - automaticRefreshInterval: The interval used between refreshes while the app is in the foreground.
+    ///   - bundledConfigURL: URL to fallback configuration included in the app in case remote URL is unavailable and not cached.
+    ///   - apply: Method called with resolved settings for the app to use.
     public init(
         url: URL,
         minimumRefreshInterval: TimeInterval = 60,
@@ -149,6 +157,8 @@ public class AppRemoteConfigService {
         config = try Config(json: json)
     }
     
+    /// Trigger a refresh
+    /// - Parameter enteringForeground: Indicate wether the app is entering the foreground
     public func update(enteringForeground: Bool = false) async throws {
         if let lastSuccessfullFetch {
             guard abs(lastSuccessfullFetch.timeIntervalSinceNow) > minimumRefreshInterval else {
@@ -187,10 +197,20 @@ public class AppRemoteConfigService {
         }
     }
     
+    /// Resolves which settings should be used by an app within its context
+    /// - Parameters:
+    ///   - date: The date at which the settings are used
+    ///   - variant: The variant of the app that runs
+    /// - Returns: Resolved settings
     public func resolve(date: Date, variant: String? = nil) -> [String: Any] {
         config?.resolve(date: date, platform: platform, platformVersion: platformVersion, appVersion: appVersion, buildVariant: buildVariant, language: language) ?? [:]
     }
     
+    /// Lists all dates on which resolving the config could give other setings
+    /// - Parameters:
+    ///   - date: The date at which the settings are used
+    ///   - variant: The variant of the app that runs
+    /// - Returns: List of relevant dates
     public func nextResolutionDate(after date: Date, variant: String? = nil) -> Date? {
        config?.relevantResolutionDates(platform: platform, platformVersion: platformVersion, appVersion: appVersion, buildVariant: buildVariant, language: language).first(where: { $0.timeIntervalSince(date) > 0 })
     }

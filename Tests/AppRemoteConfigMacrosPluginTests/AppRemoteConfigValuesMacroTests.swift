@@ -1,9 +1,13 @@
+#if os(macOS)
 import AppRemoteConfigServiceMacrosPlugin
 // Select "My Mac" as destination if the plugin cannot be found!
 import MacroTesting
+#endif
 import XCTest
 
 final class AppRemoteConfigValuesMacroTests: BaseTestCase {
+    
+#if os(macOS)
     override func invokeTest() {
         withMacroTesting(
             // isRecording: true,
@@ -309,4 +313,6 @@ final class AppRemoteConfigValuesMacroTests: BaseTestCase {
             """
         }
     }
+    
+#endif
 }
