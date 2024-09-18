@@ -26,7 +26,7 @@ To install use:
 
 Import the package in your `Package.swift` file:
 
-    .package(url: "https://github.com/egeniq/app-remote-config-ios", from: "0.2.0"),
+    .package(url: "https://github.com/egeniq/app-remote-config-ios", from: "0.3.0"),
 
 Then a good approach is to create your own `AppRemoteConfigClient`.
 
@@ -58,15 +58,15 @@ Then your `AppRemoteConfigClient.swift` is something like this:
     import Foundation
     import Perception
 
-    @AppRemoteConfigValues @Perceptible
+    @AppRemoteConfigValues @Perceptible @MainActor
     public class Values {
         public private(set) var updateRecommended: Bool = false
         public private(set) var updateRequired: Bool = false
     }
 
     @DependencyClient
-    public struct AppRemoteConfigClient {
-        public var values: () -> Values = { Values() }
+    public struct AppRemoteConfigClient: Sendable {
+        public var values: @Sendable @MainActor () -> Values = { Values() }
     }
 
     extension DependencyValues {
@@ -79,15 +79,37 @@ Then your `AppRemoteConfigClient.swift` is something like this:
     extension AppRemoteConfigClient: TestDependencyKey {
         public static let testValue = Self()
     }
-
+    
     extension AppRemoteConfigClient: DependencyKey {
         public static let liveValue = {
-            let url = URL(string: "https://www.example.com/config.json")!
-            let values = Values()
-            let service = AppRemoteConfigService(url: url, apply: values.apply(settings:))
-            return Self(values: { values })
+            let live = LockIsolated<LiveMainActorAppRemoteConfigClient?>(nil)
+            return AppRemoteConfigClient(
+                values: {
+                    if live.value == nil {
+                        let dependency = LiveMainActorAppRemoteConfigClient()
+                        live.setValue(dependency)
+                    }
+                    return live.value!.values
+                }
+            )
         }()
     }
+
+    // This is used to workaround the error:
+    // Main actor-isolated static property 'liveValue' cannot be used to satisfy nonisolated protocol requirement.
+    @MainActor
+    private class LiveMainActorAppRemoteConfigClient {
+        fileprivate let values: Values
+        private let service: AppRemoteConfigService
+        
+        init() {
+            let url = URL(string: "https://www.example.com/config.json")!
+            let bundledConfigURL = Bundle.main.url(forResource: "appconfig", withExtension: "json")
+            values = Values()
+            service = AppRemoteConfigService(url: url, bundledConfigURL: bundledConfigURL, bundleIdentifier: Bundle.main.bundleIdentifier ?? "Sample", apply: values.apply(settings:))
+        }
+    }
+
 
 ### Android
 
