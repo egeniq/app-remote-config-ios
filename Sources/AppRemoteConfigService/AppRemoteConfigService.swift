@@ -13,13 +13,13 @@ public enum AppRemoteConfigServiceError: Error {
 }
 
 /// A service to fetch a remote config from a URL periodically and when the app returns to the foreground.
-public class AppRemoteConfigService {
+public final class AppRemoteConfigService: Sendable {
     let url: URL
     let minimumRefreshInterval: TimeInterval
     let automaticRefreshInterval: TimeInterval
     let bundledConfigURL: URL?
     let bundleIdentifier: String
-    let apply: (_ settings: [String: Any]) throws -> ()
+    let apply: @Sendable @MainActor (_ settings: [String: Any]) throws -> ()
     
     let platform: Platform
     let platformVersion: OperatingSystemVersion
@@ -27,13 +27,11 @@ public class AppRemoteConfigService {
     let buildVariant: BuildVariant
     let language: String?
     
+    @MainActor
     private(set) var lastSuccessfullFetch: Date?
     
+    @MainActor
     private var config: Config!
-    
-    @Dependency(\.logger["AppRemoteConfigService"]) var logger
-    @Dependency(\.date.now) var now
-    @Dependency(\.mainQueue) var mainQueue
     
     /// Initializes service
     /// - Parameters:
@@ -43,13 +41,14 @@ public class AppRemoteConfigService {
     ///   - bundledConfigURL: URL to fallback configuration included in the app in case remote URL is unavailable and not cached.
     ///   - bundleIdentifier: Bundle identifier, recommended value is `Bundle.main.bundleIdentifier`
     ///   - apply: Method called with resolved settings for the app to use.
+    @MainActor
     public init(
         url: URL,
         minimumRefreshInterval: TimeInterval = 60,
         automaticRefreshInterval: TimeInterval = 300,
         bundledConfigURL: URL? = nil,
         bundleIdentifier: String,
-        apply: @escaping (_ settings: [String: Any]) throws -> ()
+        apply: @escaping @MainActor @Sendable (_ settings: [String: Any]) throws -> ()
     ) {
         self.url = url
         self.minimumRefreshInterval = minimumRefreshInterval
@@ -103,6 +102,8 @@ public class AppRemoteConfigService {
             language = Locale.current.languageCode
         }
         
+        @Dependency(\.logger["AppRemoteConfigService"]) var logger
+        
         if let bundledConfigURL {
             logger.debug("Reading bundled fallback")
             // This is force unwrapped because the included fallback config must parse without issue
@@ -122,7 +123,8 @@ public class AppRemoteConfigService {
             // Ignore
         }
         
-        Task { @MainActor in
+        Task {
+            @Dependency(\.date.now) var now
             resolveAndApply(date: now)
   
             do {
@@ -140,7 +142,7 @@ public class AppRemoteConfigService {
                 do {
                     try await self.update(enteringForeground: true)
                 } catch {
-                    self.logger.error("Updating failed \(error)")
+                    logger.error("Updating failed \(error)")
                 }
             }
         }
@@ -161,6 +163,7 @@ public class AppRemoteConfigService {
         return URL(fileURLWithPath: path + "/appremoteconfig.json")
     }
     
+    @MainActor
     private func readConfig(from data: Data) throws {
         guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
             throw AppRemoteConfigServiceError.unexpectedType
@@ -170,7 +173,10 @@ public class AppRemoteConfigService {
     
     /// Trigger a refresh
     /// - Parameter enteringForeground: Indicate wether the app is entering the foreground
+    @MainActor
     public func update(enteringForeground: Bool = false) async throws {
+        @Dependency(\.date.now) var now
+        @Dependency(\.logger["AppRemoteConfigService"]) var logger
         if let lastSuccessfullFetch {
             guard abs(lastSuccessfullFetch.timeIntervalSinceNow) > minimumRefreshInterval else {
                 logger.debug("Skipping updating from remote: minimum refresh interval not met")
@@ -189,7 +195,7 @@ public class AppRemoteConfigService {
         let (data, _) = try await URLSession.shared.data(from: url)
         try readConfig(from: data)
         lastSuccessfullFetch = now
-        await resolveAndApply(date: now)
+        resolveAndApply(date: now)
         do {
             if let localCacheFolderURL, let localCacheURL {
                 logger.debug("Writing cache to \(localCacheURL)")
@@ -203,6 +209,7 @@ public class AppRemoteConfigService {
         }
         let nextDate = now.addingTimeInterval(automaticRefreshInterval)
         logger.debug("Next update on date \(nextDate, privacy: .public)")
+        @Dependency(\.mainQueue) var mainQueue
         mainQueue.schedule(after: .init(.now() + nextDate.timeIntervalSinceNow)) {
             Task {
                 try await self.update()
@@ -215,6 +222,7 @@ public class AppRemoteConfigService {
     ///   - date: The date at which the settings are used
     ///   - variant: The variant of the app that runs
     /// - Returns: Resolved settings
+    @MainActor
     public func resolve(date: Date, variant: String? = nil) -> [String: Any] {
         config?.resolve(date: date, platform: platform, platformVersion: platformVersion, appVersion: appVersion, buildVariant: buildVariant, language: language) ?? [:]
     }
@@ -224,12 +232,14 @@ public class AppRemoteConfigService {
     ///   - date: The date at which the settings are used
     ///   - variant: The variant of the app that runs
     /// - Returns: List of relevant dates
+    @MainActor
     public func nextResolutionDate(after date: Date, variant: String? = nil) -> Date? {
        config?.relevantResolutionDates(platform: platform, platformVersion: platformVersion, appVersion: appVersion, buildVariant: buildVariant, language: language).first(where: { $0.timeIntervalSince(date) > 0 })
     }
     
     @MainActor
     private func resolveAndApply(date: Date) {
+        @Dependency(\.logger["AppRemoteConfigService"]) var logger
         logger.debug("Resolving settings for date \(date, privacy: .public)")
         let settings = resolve(date: date)
         logger.debug("Applying settings \(settings)")
@@ -255,6 +265,7 @@ public class AppRemoteConfigService {
         }
         if let nextDate = nextResolutionDate(after: date) {
             logger.debug("Next resolve on date \(nextDate, privacy: .public)")
+            @Dependency(\.mainQueue) var mainQueue
             mainQueue.schedule(after: .init(.now() + nextDate.timeIntervalSinceNow)) {
                 self.resolveAndApply(date: nextDate)
             }

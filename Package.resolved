@@ -1,12 +1,13 @@
 {
+  "originHash" : "0154aa5882cce9310ef136356bd32899f6be6d05e85c070f0f166fc0db956d5c",
   "pins" : [
     {
       "identity" : "app-remote-config",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/egeniq/app-remote-config",
       "state" : {
-        "revision" : "0ab2f3e3b3d5cc0a41112cbd8b4adb9079323373",
-        "version" : "0.2.0"
+        "revision" : "13d7fab57b522d05b5fc540a6f784c9fb461de67",
+        "version" : "0.3.0"
       }
     },
     {
@@ -91,5 +92,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

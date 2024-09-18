@@ -5,6 +5,7 @@ import Dependencies
 
 final class AppRemoteConfigTests: XCTestCase {
     
+    @MainActor
     class Values {
         init() {
             foo = nil
@@ -17,7 +18,7 @@ final class AppRemoteConfigTests: XCTestCase {
         }
     }
     
-    
+    @MainActor
     func testSomething() async throws {
         let values = Values()
         let sut = withDependencies {
