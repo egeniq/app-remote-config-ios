@@ -23,11 +23,18 @@ final class AppRemoteConfigTests: XCTestCase {
         let sut = withDependencies {
             $0.date.now = Date(timeIntervalSince1970: 0)
         } operation: {
-            AppRemoteConfigService(url: URL(string: "http://www.example.com")!, minimumRefreshInterval: 60, automaticRefreshInterval: 120, bundledConfigURL: nil, apply: values.apply(settings:))
+            AppRemoteConfigService(
+                url: URL(string: "http://www.example.com")!,
+                minimumRefreshInterval: 60,
+                automaticRefreshInterval: 120,
+                bundledConfigURL: nil,
+                bundleIdentifier: "com.egeniq.projects.appremoteconfigservice.test",
+                apply: values.apply(settings:)
+            )
         }
         
-        let settings = sut.resolve(date: Date(timeIntervalSince1970: 0)) as! [String: String]
-        XCTAssertEqual(settings, [:])
+        let settings = sut.resolve(date: Date(timeIntervalSince1970: 0))
+        XCTAssertEqual(settings.keys.count, 0)
         
         // TODO: More extensive tests
         // Mocking content of config not very feasible this way

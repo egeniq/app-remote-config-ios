@@ -18,6 +18,7 @@ public class AppRemoteConfigService {
     let minimumRefreshInterval: TimeInterval
     let automaticRefreshInterval: TimeInterval
     let bundledConfigURL: URL?
+    let bundleIdentifier: String
     let apply: (_ settings: [String: Any]) throws -> ()
     
     let platform: Platform
@@ -40,18 +41,21 @@ public class AppRemoteConfigService {
     ///   - minimumRefreshInterval: The minimum time interval between refreshes.
     ///   - automaticRefreshInterval: The interval used between refreshes while the app is in the foreground.
     ///   - bundledConfigURL: URL to fallback configuration included in the app in case remote URL is unavailable and not cached.
+    ///   - bundleIdentifier: Bundle identifier, recommended value is `Bundle.main.bundleIdentifier`
     ///   - apply: Method called with resolved settings for the app to use.
     public init(
         url: URL,
         minimumRefreshInterval: TimeInterval = 60,
         automaticRefreshInterval: TimeInterval = 300,
         bundledConfigURL: URL? = nil,
+        bundleIdentifier: String,
         apply: @escaping (_ settings: [String: Any]) throws -> ()
     ) {
         self.url = url
         self.minimumRefreshInterval = minimumRefreshInterval
         self.automaticRefreshInterval = automaticRefreshInterval
         self.bundledConfigURL = bundledConfigURL
+        self.bundleIdentifier = bundleIdentifier
         self.apply = apply
         
 #if os(iOS) || os(tvOS)
@@ -143,11 +147,18 @@ public class AppRemoteConfigService {
 #endif
     }
     
-    var localCacheURL: URL? {
+    var localCacheFolderURL: URL? {
         guard let path = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first else {
             return nil
         }
-        return URL(fileURLWithPath: path + "/appremoteconfig")
+        return URL(fileURLWithPath: path + "/" + bundleIdentifier + "/")
+    }
+    
+    var localCacheURL: URL? {
+        guard let path = localCacheFolderURL?.relativePath else {
+            return nil
+        }
+        return URL(fileURLWithPath: path + "/appremoteconfig.json")
     }
     
     private func readConfig(from data: Data) throws {
@@ -180,7 +191,9 @@ public class AppRemoteConfigService {
         lastSuccessfullFetch = now
         await resolveAndApply(date: now)
         do {
-            if let localCacheURL {
+            if let localCacheFolderURL, let localCacheURL {
+                logger.debug("Writing cache to \(localCacheURL)")
+                try FileManager.default.createDirectory(at: localCacheFolderURL, withIntermediateDirectories: true)
                 try data.write(to: localCacheURL)
             } else {
                 assertionFailure("Failed to create local cache URL")
