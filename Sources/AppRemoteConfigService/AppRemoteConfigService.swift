@@ -3,6 +3,7 @@ import Dependencies
 import DependenciesAdditions
 import Foundation
 import OSLog
+import SodiumClientLive
 #if os(iOS) || os(tvOS)
 import UIKit
 #endif
@@ -15,6 +16,7 @@ public enum AppRemoteConfigServiceError: Error {
 /// A service to fetch a remote config from a URL periodically and when the app returns to the foreground.
 public final class AppRemoteConfigService: Sendable {
     let url: URL
+    let publicKey: String?
     let minimumRefreshInterval: TimeInterval
     let automaticRefreshInterval: TimeInterval
     let bundledConfigURL: URL?
@@ -36,6 +38,7 @@ public final class AppRemoteConfigService: Sendable {
     /// Initializes service
     /// - Parameters:
     ///   - url: URL to remote config.
+    ///   - publicKey: Provide the public key that is used for signing the config. Use `nil` for an unsigned config.
     ///   - minimumRefreshInterval: The minimum time interval between refreshes.
     ///   - automaticRefreshInterval: The interval used between refreshes while the app is in the foreground.
     ///   - bundledConfigURL: URL to fallback configuration included in the app in case remote URL is unavailable and not cached.
@@ -44,6 +47,7 @@ public final class AppRemoteConfigService: Sendable {
     @MainActor
     public init(
         url: URL,
+        publicKey: String?,
         minimumRefreshInterval: TimeInterval = 60,
         automaticRefreshInterval: TimeInterval = 300,
         bundledConfigURL: URL? = nil,
@@ -51,6 +55,7 @@ public final class AppRemoteConfigService: Sendable {
         apply: @escaping @MainActor @Sendable (_ settings: [String: Any]) throws -> ()
     ) {
         self.url = url
+        self.publicKey = publicKey
         self.minimumRefreshInterval = minimumRefreshInterval
         self.automaticRefreshInterval = automaticRefreshInterval
         self.bundledConfigURL = bundledConfigURL
@@ -165,10 +170,11 @@ public final class AppRemoteConfigService: Sendable {
     
     @MainActor
     private func readConfig(from data: Data) throws {
-        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-            throw AppRemoteConfigServiceError.unexpectedType
+        if let publicKey {
+            config = try Config(data: data, publicKey: publicKey)
+        } else {
+            config = try Config(data: data)
         }
-        config = try Config(json: json)
     }
     
     /// Trigger a refresh

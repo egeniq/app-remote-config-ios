@@ -1,7 +1,8 @@
-import XCTest
-import Foundation
-import Dependencies
 @testable import AppRemoteConfigService
+import Dependencies
+import Foundation
+import SodiumClientLive
+import XCTest
 
 final class AppRemoteConfigTests: XCTestCase {
     
@@ -23,9 +24,11 @@ final class AppRemoteConfigTests: XCTestCase {
         let values = Values()
         let sut = withDependencies {
             $0.date.now = Date(timeIntervalSince1970: 0)
+            $0.sodiumClient = .liveValue
         } operation: {
             AppRemoteConfigService(
                 url: URL(string: "http://www.example.com")!,
+                publicKey: nil,
                 minimumRefreshInterval: 60,
                 automaticRefreshInterval: 120,
                 bundledConfigURL: nil,
