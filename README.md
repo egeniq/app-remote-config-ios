@@ -26,7 +26,7 @@ To install use:
 
 Import the package in your `Package.swift` file:
 
-    .package(url: "https://github.com/egeniq/app-remote-config-ios", from: "0.3.0"),
+    .package(url: "https://github.com/egeniq/app-remote-config-ios", from: "0.4.0"),
 
 Then a good approach is to create your own `AppRemoteConfigClient`.
 
@@ -106,7 +106,7 @@ Then your `AppRemoteConfigClient.swift` is something like this:
             let url = URL(string: "https://www.example.com/config.json")!
             let bundledConfigURL = Bundle.main.url(forResource: "appconfig", withExtension: "json")
             values = Values()
-            service = AppRemoteConfigService(url: url, bundledConfigURL: bundledConfigURL, bundleIdentifier: Bundle.main.bundleIdentifier ?? "Sample", apply: values.apply(settings:))
+            service = AppRemoteConfigService(url: url, publicKey: nil, bundledConfigURL: bundledConfigURL, bundleIdentifier: Bundle.main.bundleIdentifier ?? "Sample", apply: values.apply(settings:))
         }
     }
 

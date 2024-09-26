@@ -19,7 +19,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/egeniq/app-remote-config", from: "0.3.0"),
+        .package(url: "https://github.com/egeniq/app-remote-config", from: "0.4.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax", "509.0.0"..<"600.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.2.0"),
@@ -53,12 +53,14 @@ let package = Package(
             dependencies: [
                 .product(name: "AppRemoteConfig", package: "app-remote-config"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "DependenciesAdditions", package: "swift-dependencies-additions")
+                .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
+                .product(name: "SodiumClientLive", package: "app-remote-config")
             ]),
         .testTarget(
             name: "AppRemoteConfigServiceTests",
             dependencies: [
-                "AppRemoteConfigService"
+                "AppRemoteConfigService",
+                .product(name: "SodiumClientLive", package: "app-remote-config")
             ]
         )
     ]
