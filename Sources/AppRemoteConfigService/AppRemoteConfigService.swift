@@ -29,10 +29,8 @@ public final class AppRemoteConfigService: Sendable {
     let buildVariant: BuildVariant
     let language: String?
     
-    @MainActor
     private(set) var lastSuccessfullFetch: Date?
     
-    @MainActor
     private var config: Config!
     
     /// Initializes service
@@ -44,7 +42,6 @@ public final class AppRemoteConfigService: Sendable {
     ///   - bundledConfigURL: URL to fallback configuration included in the app in case remote URL is unavailable and not cached.
     ///   - bundleIdentifier: Bundle identifier, recommended value is `Bundle.main.bundleIdentifier`
     ///   - apply: Method called with resolved settings for the app to use.
-    @MainActor
     public init(
         url: URL,
         publicKey: String?,
@@ -52,7 +49,7 @@ public final class AppRemoteConfigService: Sendable {
         automaticRefreshInterval: TimeInterval = 300,
         bundledConfigURL: URL? = nil,
         bundleIdentifier: String,
-        apply: @escaping @MainActor @Sendable (_ settings: [String: Any]) throws -> ()
+        apply: @escaping @Sendable @MainActor (_ settings: [String: Any]) throws -> ()
     ) {
         self.url = url
         self.publicKey = publicKey
@@ -130,7 +127,7 @@ public final class AppRemoteConfigService: Sendable {
         
         Task {
             @Dependency(\.date.now) var now
-            resolveAndApply(date: now)
+            await resolveAndApply(date: now)
   
             do {
                 try await update()
@@ -168,7 +165,6 @@ public final class AppRemoteConfigService: Sendable {
         return URL(fileURLWithPath: path + "/appremoteconfig.json")
     }
     
-    @MainActor
     private func readConfig(from data: Data) throws {
         if let publicKey {
             config = try Config(data: data, publicKey: publicKey)
@@ -179,7 +175,6 @@ public final class AppRemoteConfigService: Sendable {
     
     /// Trigger a refresh
     /// - Parameter enteringForeground: Indicate wether the app is entering the foreground
-    @MainActor
     public func update(enteringForeground: Bool = false) async throws {
         @Dependency(\.date.now) var now
         @Dependency(\.logger["AppRemoteConfigService"]) var logger
@@ -201,7 +196,7 @@ public final class AppRemoteConfigService: Sendable {
         let (data, _) = try await URLSession.shared.data(from: url)
         try readConfig(from: data)
         lastSuccessfullFetch = now
-        resolveAndApply(date: now)
+        await resolveAndApply(date: now)
         do {
             if let localCacheFolderURL, let localCacheURL {
                 logger.debug("Writing cache to \(localCacheURL)")
@@ -228,7 +223,6 @@ public final class AppRemoteConfigService: Sendable {
     ///   - date: The date at which the settings are used
     ///   - variant: The variant of the app that runs
     /// - Returns: Resolved settings
-    @MainActor
     public func resolve(date: Date, variant: String? = nil) -> [String: Any] {
         config?.resolve(date: date, platform: platform, platformVersion: platformVersion, appVersion: appVersion, buildVariant: buildVariant, language: language) ?? [:]
     }
@@ -238,7 +232,6 @@ public final class AppRemoteConfigService: Sendable {
     ///   - date: The date at which the settings are used
     ///   - variant: The variant of the app that runs
     /// - Returns: List of relevant dates
-    @MainActor
     public func nextResolutionDate(after date: Date, variant: String? = nil) -> Date? {
        config?.relevantResolutionDates(platform: platform, platformVersion: platformVersion, appVersion: appVersion, buildVariant: buildVariant, language: language).first(where: { $0.timeIntervalSince(date) > 0 })
     }

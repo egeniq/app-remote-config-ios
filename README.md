@@ -26,7 +26,7 @@ To install use:
 
 Import the package in your `Package.swift` file:
 
-    .package(url: "https://github.com/egeniq/app-remote-config-ios", from: "0.4.0"),
+    .package(url: "https://github.com/egeniq/app-remote-config-ios", from: "0.5.0"),
 
 Then a good approach is to create your own `AppRemoteConfigClient`.
 
